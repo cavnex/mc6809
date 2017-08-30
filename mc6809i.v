@@ -1907,19 +1907,24 @@ begin
                     end
                     else if (Inst1 == OPCODE_INH_DAA)       // Bcd lunacy
                     begin
-                        if ( ((a[3:0] > 4'H9) | (cc[CC_H_BIT])) &
-                             ((a[7:4] > 4'H9) | (cc[CC_C_BIT])) )
-                        begin
-                            {cc_nxt[CC_C_BIT], a_nxt} = {1'b0, a} + 8'H66;
-                        end                     
-                        else if ((a[3:0] > 4'H9) | (cc[CC_H_BIT]))
-                        begin
-                            {cc_nxt[CC_C_BIT], a_nxt} = {1'b0, a} + 8'H06;
-                        end
-                        else if ((a[7:4] > 4'H9) | (cc[CC_C_BIT]))
-                        begin
-                            {cc_nxt[CC_C_BIT], a_nxt} = {1'b0, a} + 8'H60;
-                        end
+                        if ( ((cc[CC_C_BIT]) || (a[7:4] > 4'H9)) ||
+                             ((a[7:4] > 4'H8) && (a[3:0] > 4'H9)) )
+                            tmp_nxt[7:4] = 4'H6;
+                        else
+                            tmp_nxt[7:4] = 4'H0;
+                            
+                        if ((cc[CC_H_BIT]) || (a[3:0] > 4'H9))
+                            tmp_nxt[3:0] = 4'H6;
+                        else
+                            tmp_nxt[3:0] = 4'H0;
+                            
+                        // DAA handles carry in the weirdest way.  
+                        // If it's already set, it remains set, even if carry-out is 0.
+                        // If it wasn't set, but the output of the operation is set, carry-out gets set.
+                        {tmp_nxt[8], a_nxt} = {1'b0, a} + tmp_nxt[7:0];
+                        
+                        cc_nxt[CC_C_BIT] = cc_nxt[CC_C_BIT] | tmp_nxt[8];
+
                         cc_nxt[CC_N_BIT] = a_nxt[7];
                         cc_nxt[CC_Z_BIT] = (a_nxt == 8'H00);
                         rLIC = 1'b1; // Instruction done!
