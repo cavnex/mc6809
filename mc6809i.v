@@ -1973,6 +1973,7 @@ begin
                         a_nxt = {8{b[7]}};
                         cc_nxt[CC_N_BIT] = b[7];
                         cc_nxt[CC_Z_BIT] = {b == 8'H00};
+                        cc_nxt[CC_V_BIT] = 1'b0;
                         rLIC = 1'b1; // Instruction done!
                         rAVMA = 1'b1;
                         CpuState_nxt = CPUSTATE_FETCH_I1;
